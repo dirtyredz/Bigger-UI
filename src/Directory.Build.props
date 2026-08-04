@@ -1,0 +1,11 @@
+<Project>
+
+  <PropertyGroup>
+    <MoonlightPeaksGamePath>C:\Program Files (x86)\Steam\steamapps\common\Moonlight Peaks</MoonlightPeaksGamePath>
+    <MoonlightPeaksManagedPath>$(MoonlightPeaksGamePath)\Moonlight Peaks_Data\Managed</MoonlightPeaksManagedPath>
+    <MoonlightPeaksBepInExCorePath>$(MoonlightPeaksGamePath)\BepInEx\core</MoonlightPeaksBepInExCorePath>
+    <MoonlightPeaksPluginDeployPath>$(MoonlightPeaksGamePath)\BepInEx\plugins\MoonlightPeaksMods</MoonlightPeaksPluginDeployPath>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+</Project>

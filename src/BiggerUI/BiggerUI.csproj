@@ -1,0 +1,70 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>BiggerUI</AssemblyName>
+    <RootNamespace>BiggerUI</RootNamespace>
+    <Version>0.8.0</Version>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <ModDeployPath>$(MoonlightPeaksPluginDeployPath)\BiggerUI</ModDeployPath>
+    <!-- The game ships its own copies of every assembly below; never copy them next to the plugin. -->
+    <AssemblySearchPaths>$(AssemblySearchPaths);$(MoonlightPeaksManagedPath)</AssemblySearchPaths>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="BepInEx">
+      <HintPath>$(MoonlightPeaksBepInExCorePath)\BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- Patching TextMeshProUGUI.OnEnable, so a new screen is scaled before it is drawn. -->
+    <Reference Include="0Harmony">
+      <HintPath>$(MoonlightPeaksBepInExCorePath)\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <Reference Include="UnityEngine">
+      <HintPath>$(MoonlightPeaksManagedPath)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- Also where SceneManager lives; there is no separate SceneManagementModule here. -->
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(MoonlightPeaksManagedPath)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- Needed to compile against TextMeshProUGUI at all: it derives from MaskableGraphic,
+         which lives here. Nothing in this mod reads or writes a CanvasScaler. -->
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(MoonlightPeaksManagedPath)\UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- Canvas lives here, not in CoreModule. Used only to read a text's root canvas name;
+         nothing about canvas geometry is written - that was v0.1.0's mistake. -->
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>$(MoonlightPeaksManagedPath)\UnityEngine.UIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- Chicken.UI.UIScreen: every game screen derives from it, so it is what defines an
+         "area" for the per-screen scale overrides. -->
+    <Reference Include="littlechickengamecompany.chicken-ui.runtime">
+      <HintPath>$(MoonlightPeaksManagedPath)\littlechickengamecompany.chicken-ui.runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- Input.GetKeyDown for the compare toggle. -->
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(MoonlightPeaksManagedPath)\UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- TextMeshProUGUI - the only thing this mod writes to. -->
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>$(MoonlightPeaksManagedPath)\Unity.TextMeshPro.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="DeployPlugin" AfterTargets="Build" Condition="'$(SkipDeploy)' != 'true'">
+    <MakeDir Directories="$(ModDeployPath)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModDeployPath)" SkipUnchangedFiles="true" />
+    <Message Importance="high" Text="Deployed $(AssemblyName).dll -> $(ModDeployPath)" />
+  </Target>
+
+</Project>
