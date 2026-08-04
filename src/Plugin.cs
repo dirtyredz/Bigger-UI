@@ -26,7 +26,7 @@ namespace BiggerUI
     {
         public const string PluginGuid = "com.dirtyredz.moonlightpeaks.biggerui";
         public const string PluginName = "Bigger UI";
-        public const string PluginVersion = "0.9.0";
+        public const string PluginVersion = "0.10.0";
 
         /// <summary>What to do about text that TextMeshPro fits to its box.</summary>
         public enum AutoSizeMode
@@ -51,6 +51,7 @@ namespace BiggerUI
 
         internal static ConfigEntry<float> Scale;
         internal static ConfigEntry<string> AreaScales;
+        internal static ConfigEntry<float> MaxFontSize;
         internal static ConfigEntry<string> AreaMaxFontSize;
         internal static ConfigEntry<string> Canvases;
         internal static ConfigEntry<bool> FitToBox;
@@ -114,6 +115,22 @@ namespace BiggerUI
                 "range.",
                 null,
                 ScaleSection, "ModMenu.Label=Per-screen scale"));
+
+            MaxFontSize = Config.Bind(
+                "Scale", "MaxFontSize", 36f,
+                new ConfigDescription(
+                    "The largest any text is allowed to become, in points. 0 turns the ceiling " +
+                    "off.\n" +
+                    "A percentage increase hurts most where text is already large - a speaker's " +
+                    "name during dialogue grows enough to push its nameplate over whatever sits " +
+                    "beside it. Bounding the result in points rather than the multiplier fixes " +
+                    "that without holding back ordinary body text, which is nowhere near this " +
+                    "size.\n" +
+                    "AreaMaxFontSize overrides this for a named screen. Like every ceiling here, " +
+                    "it only limits growth: text the game already draws larger than this is left " +
+                    "alone rather than shrunk.",
+                    new AcceptableValueRange<float>(0f, 96f),
+                    ScaleSection, "ModMenu.Label=Maximum size"));
 
             AreaMaxFontSize = Config.Bind(
                 "Scale", "AreaMaxFontSize", string.Empty,

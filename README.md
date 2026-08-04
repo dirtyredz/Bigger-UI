@@ -111,6 +111,7 @@ Two lessons, and the second is the one that cost the time:
 | `Scale / AreaScales` | *(empty)* | Per-screen scale overrides, `QuestScreen=1.0, InventoryScreen=1.4` |
 | `Scale / AreaMaxFontSize` | *(empty)* | Per-screen ceilings in points, `QuestScreen=26` |
 | `Scale / Canvases` | `GameCanvas,SharedCanvas,MenuCanvas` | Exact root canvas names to scale text on. An allowlist on purpose |
+| `Scale / MaxFontSize` | `36` | Largest any text may become, in points. `0` turns it off |
 | `Scale / FitToBox` | `true` | Grow ordinary text by letting TextMeshPro fit it, rather than multiplying blind |
 | `Scale / AutoSize` | `Force` | `Force` / `GrowWithinBox` / `Off` — how to treat text already fitted to its box |
 | `Scale / ToggleKey` | `RightAlt` | Flips scaling on and off for A/B comparison. **A testing aid** |
@@ -138,6 +139,31 @@ scale it is receiving, and **the largest resulting font size on it**:
 ```
 Area 'QuestScreen': 25 text element(s) at 1.25x, largest resulting size 31.2pt.
 ```
+
+## Boxes that size themselves
+
+Fitting text to its box is wrong when something is already sizing that box to the text. A
+`ContentSizeFitter` and TextMeshPro's auto-sizing actively fight: the fitter widens the box,
+auto-sizing then sees text that already fits, and nothing grows. The interaction prompts in the
+bottom-left corner did exactly this in v0.9.0 — the row expanded sideways while the letters
+stayed the same size.
+
+So the mod looks for a `ContentSizeFitter` on the text and up to four ancestors — the fitter
+normally sits on the row, not the label — and where it finds one, multiplies the size directly.
+That is safe precisely because the box grows with the text.
+
+## Growing what is already large
+
+A percentage increase does the most damage where text starts big. A speaker's name during
+dialogue is the clearest case: scaled up, the nameplate grows enough to cover what sits beside
+it.
+
+`MaxFontSize` (default **36pt**) bounds the *result* rather than the multiplier, which is the
+right shape for this — ordinary body text is nowhere near 36pt and is unaffected, while
+already-large text stops before it becomes a problem. `0` disables it.
+
+Like every ceiling here, it only limits growth: text the game already draws larger than the
+ceiling is left alone rather than shrunk.
 
 ## Per-area ceiling
 
@@ -336,10 +362,18 @@ The clamp is an estimate. It measures preferred height at the currently drawn si
 the ratio, which assumes line count does not change; when bigger text wraps onto an extra line
 the real requirement jumps past the estimate. Good enough to help, not good enough to promise.
 
-**v0.8.0** — to run. Adds `AreaMaxFontSize` for a hard per-screen ceiling in points, and the log
-now reports the largest resulting size per screen so the ceiling can be set from a real number.
-Suggested first try: put `Scale` back up to where it reads well, then
-`AreaMaxFontSize = QuestScreen=<something below the size the log reports>`.
+**v0.8.0, 2026-08-04.** Added `AreaMaxFontSize` and per-screen size reporting. Quest names still
+vanished — the per-screen ceiling was never set, and more importantly the diagnosis was still
+wrong.
+
+**v0.9.0, 2026-08-04.** **Quest log fixed**, by treating fixed-size text as its own case and
+letting TextMeshPro fit it. Two consequences surfaced in play:
+
+- The bottom-left interaction prompts expanded sideways without the letters growing — a
+  `ContentSizeFitter` sizing the box against the fitting.
+- Dialogue speaker names grew enough to push their nameplates over neighbouring text.
+
+**v0.10.0** — to run. Skips fitting where the box sizes itself, and adds a 36pt global ceiling.
 
 Two things to watch specifically, because they are the predicted failure points:
 

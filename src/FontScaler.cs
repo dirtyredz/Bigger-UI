@@ -5,6 +5,7 @@ using Chicken.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace BiggerUI
 {
@@ -96,6 +97,7 @@ namespace BiggerUI
             BiggerUiPlugin.Scale.SettingChanged += HandleSettingChanged;
             BiggerUiPlugin.AreaScales.SettingChanged += HandleSettingChanged;
             BiggerUiPlugin.AreaMaxFontSize.SettingChanged += HandleSettingChanged;
+            BiggerUiPlugin.MaxFontSize.SettingChanged += HandleSettingChanged;
             BiggerUiPlugin.Canvases.SettingChanged += HandleSettingChanged;
             BiggerUiPlugin.AutoSize.SettingChanged += HandleSettingChanged;
             BiggerUiPlugin.FitToBox.SettingChanged += HandleSettingChanged;
@@ -113,6 +115,7 @@ namespace BiggerUI
             BiggerUiPlugin.Scale.SettingChanged -= HandleSettingChanged;
             BiggerUiPlugin.AreaScales.SettingChanged -= HandleSettingChanged;
             BiggerUiPlugin.AreaMaxFontSize.SettingChanged -= HandleSettingChanged;
+            BiggerUiPlugin.MaxFontSize.SettingChanged -= HandleSettingChanged;
             BiggerUiPlugin.Canvases.SettingChanged -= HandleSettingChanged;
             BiggerUiPlugin.AutoSize.SettingChanged -= HandleSettingChanged;
             BiggerUiPlugin.FitToBox.SettingChanged -= HandleSettingChanged;
@@ -303,7 +306,7 @@ namespace BiggerUI
                     }
                 }
 
-                var cap = areaCaps.TryGetValue(area, out var capValue) ? capValue : float.MaxValue;
+                var cap = CeilingFor(area, areaCaps);
 
                 if (ScaleText(text, effectiveScale, autoSizeMode, cap))
                 {
@@ -400,6 +403,53 @@ namespace BiggerUI
             }
 
             return highest;
+        }
+
+        /// <summary>
+        /// The point ceiling for a screen: its own AreaMaxFontSize entry if it has one, otherwise
+        /// the global MaxFontSize, otherwise none.
+        ///
+        /// <para>The global ceiling exists because some text is large before anything scales it -
+        /// a speaker's name during dialogue, most visibly - and a percentage increase on already
+        /// large text is what pushes a nameplate over its neighbours. A ceiling in points bounds
+        /// the result rather than the multiplier.</para>
+        /// </summary>
+        private static float CeilingFor(string area, Dictionary<string, float> areaCaps)
+        {
+            if (areaCaps.TryGetValue(area, out var areaCap))
+            {
+                return areaCap;
+            }
+
+            var global = BiggerUiPlugin.MaxFontSize.Value;
+            return global > 0f ? global : float.MaxValue;
+        }
+
+        /// <summary>
+        /// True when something is already sizing this text's box to its content, so the box will
+        /// grow along with the text and needs no fitting.
+        ///
+        /// <para>Checked on the text and a few ancestors, because the fitter usually sits on the
+        /// row rather than the label - an interaction prompt is a horizontal row of icon plus
+        /// text with the fitter on the row itself.</para>
+        /// </summary>
+        private static bool HasSelfSizingBox(TextMeshProUGUI text)
+        {
+            const int levels = 4;
+
+            var current = text.transform;
+            for (var i = 0; i < levels && current != null; i++, current = current.parent)
+            {
+                var fitter = current.GetComponent<ContentSizeFitter>();
+                if (fitter != null &&
+                    (fitter.horizontalFit != ContentSizeFitter.FitMode.Unconstrained ||
+                     fitter.verticalFit != ContentSizeFitter.FitMode.Unconstrained))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -610,7 +660,12 @@ namespace BiggerUI
             // auto-sizing on between the original size and the scaled size means it picks the
             // largest size that actually fits: bigger where there is room, unchanged where there
             // is none, and never smaller than the game's own size - so it cannot vanish.
-            if (BiggerUiPlugin.FitToBox.Value)
+            // A box that resizes itself to its content does not need protecting - it grows with
+            // the text. Worse, fitting the text to it does not work: the fitter widens the box,
+            // auto-sizing then sees text that already fits, and nothing grows at all. That is
+            // the bottom-left interaction prompts, which expanded sideways without the letters
+            // getting any bigger.
+            if (BiggerUiPlugin.FitToBox.Value && !HasSelfSizingBox(text))
             {
                 var ceiling = Ceiling(baseline.FontSize * scale, cap, baseline.FontSize);
 
