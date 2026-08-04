@@ -26,7 +26,7 @@ namespace BiggerUI
     {
         public const string PluginGuid = "com.dirtyredz.moonlightpeaks.biggerui";
         public const string PluginName = "Bigger UI";
-        public const string PluginVersion = "0.8.0";
+        public const string PluginVersion = "0.9.0";
 
         /// <summary>What to do about text that TextMeshPro fits to its box.</summary>
         public enum AutoSizeMode
@@ -53,6 +53,7 @@ namespace BiggerUI
         internal static ConfigEntry<string> AreaScales;
         internal static ConfigEntry<string> AreaMaxFontSize;
         internal static ConfigEntry<string> Canvases;
+        internal static ConfigEntry<bool> FitToBox;
         internal static ConfigEntry<AutoSizeMode> AutoSize;
         internal static ConfigEntry<KeyboardShortcut> ToggleKey;
         internal static ConfigEntry<bool> LogReport;
@@ -128,6 +129,23 @@ namespace BiggerUI
                 "text at the game's size rather than shrinking it.",
                 null,
                 ScaleSection, "ModMenu.Label=Per-screen maximum size"));
+
+            FitToBox = Config.Bind(
+                "Scale", "FitToBox", true,
+                new ConfigDescription(
+                "Grow ordinary, fixed-size text by letting TextMeshPro fit it, instead of just " +
+                "multiplying its size.\n" +
+                "On, the text is given a size range from its original size up to the scaled " +
+                "size, and TextMeshPro picks the largest that actually fits its box: bigger " +
+                "where there is room, unchanged where there is none. It cannot overflow and it " +
+                "cannot disappear.\n" +
+                "Off multiplies the size directly, which is what earlier versions did. Text " +
+                "then grows past what its box holds, and where a box is too tight TextMeshPro " +
+                "drops the line rather than spilling it - which is why the quest log's names " +
+                "vanished. Only turn this off if fitted text looks inconsistent between rows " +
+                "and you would rather have uniform sizes with the clipping that brings.",
+                null,
+                ScaleSection, "ModMenu.Label=Fit text to its box"));
 
             AutoSize = Config.Bind(
                 "Scale", "AutoSize", AutoSizeMode.Force,

@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>BiggerUI</AssemblyName>
     <RootNamespace>BiggerUI</RootNamespace>
-    <Version>0.8.0</Version>
+    <Version>0.9.0</Version>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <ModDeployPath>$(MoonlightPeaksPluginDeployPath)\BiggerUI</ModDeployPath>
     <!-- The game ships its own copies of every assembly below; never copy them next to the plugin. -->

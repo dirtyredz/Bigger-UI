@@ -111,7 +111,8 @@ Two lessons, and the second is the one that cost the time:
 | `Scale / AreaScales` | *(empty)* | Per-screen scale overrides, `QuestScreen=1.0, InventoryScreen=1.4` |
 | `Scale / AreaMaxFontSize` | *(empty)* | Per-screen ceilings in points, `QuestScreen=26` |
 | `Scale / Canvases` | `GameCanvas,SharedCanvas,MenuCanvas` | Exact root canvas names to scale text on. An allowlist on purpose |
-| `Scale / AutoSize` | `Force` | `Force` / `GrowWithinBox` / `Off` — how to treat text fitted to its box |
+| `Scale / FitToBox` | `true` | Grow ordinary text by letting TextMeshPro fit it, rather than multiplying blind |
+| `Scale / AutoSize` | `Force` | `Force` / `GrowWithinBox` / `Off` — how to treat text already fitted to its box |
 | `Scale / ToggleKey` | `RightAlt` | Flips scaling on and off for A/B comparison. **A testing aid** |
 | `Diagnostics / LogReport` | `true` | Names each canvas and each screen as it is first scaled, and logs each pass whose element count changed |
 
@@ -158,7 +159,29 @@ A ceiling only limits how far this mod grows text. Setting one **below** the gam
 leaves that text at the game's size rather than shrinking it; this mod never makes text smaller
 than it found it.
 
-## Vanishing text, and why `Force` causes it
+## The vanishing quest names — the actual cause
+
+Three versions treated this as an auto-sizing problem. It was not.
+
+**Every fit check applied only to auto-sized text.** Fixed-size text took a different branch —
+`fontSize = original × scale`, no measurement, no cap. So all three `AutoSize` settings were
+irrelevant to it. The proof arrived when `AutoSize = GrowWithinBox`, which provably cannot
+shrink or delete auto-sized text, left the quest names vanishing exactly as before. That ruled
+out the diagnosis rather than confirming it, which is what it should have done two versions
+earlier.
+
+**And the fitting was estimated rather than measured.** `FittingSize` scales a preferred-height
+ratio, which assumes the line count does not change — false the moment bigger text wraps.
+TextMeshPro computes this exactly; that is what auto-sizing is for.
+
+So v0.9.0 stops estimating. `FitToBox` gives fixed-size text a range from its original size up
+to the scaled size and lets TextMeshPro choose: bigger where there is room, unchanged where
+there is none, never below the game's own size. It cannot overflow and it cannot disappear.
+
+The honest cost: text in a tight box no longer grows, and rows in the same list can end up at
+slightly different sizes. That is the price of never deleting anything.
+
+## Historical: why `Force` caused vanishing in auto-sized text
 
 Reported in the v0.5.0 run: at 1.25x the quest log's **quest names disappeared entirely** while
 everything else worked.
@@ -203,7 +226,7 @@ AltGr, which Unity reports as LeftControl *and* RightAlt together, so the check 
 modifier and refused even with nothing else pressed.
 
 Plant Peek had already hit this and written it down — its binding "simply never fired while
-moving". [`Hotkey.cs`](src/BiggerUI/Hotkey.cs) here is that same helper, copied:
+moving". [`Hotkey.cs`](src/Hotkey.cs) here is that same helper, copied:
 check the bound key and its declared modifiers, ignore everything else. **The answer was in the
 repo before the bug was written.**
 

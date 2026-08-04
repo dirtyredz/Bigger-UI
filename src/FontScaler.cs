@@ -58,6 +58,12 @@ namespace BiggerUI
             /// </summary>
             internal float FittingSize = float.MaxValue;
             internal int MeasuredLength = -1;
+
+            /// <summary>
+            /// True when auto-sizing was switched on by this mod to fit fixed-size text. Restore
+            /// has to switch it back off, or the text would keep resizing itself afterwards.
+            /// </summary>
+            internal bool FitToBoxApplied;
         }
 
         internal static FontScaler Instance { get; private set; }
@@ -92,6 +98,7 @@ namespace BiggerUI
             BiggerUiPlugin.AreaMaxFontSize.SettingChanged += HandleSettingChanged;
             BiggerUiPlugin.Canvases.SettingChanged += HandleSettingChanged;
             BiggerUiPlugin.AutoSize.SettingChanged += HandleSettingChanged;
+            BiggerUiPlugin.FitToBox.SettingChanged += HandleSettingChanged;
             Apply();
         }
 
@@ -108,6 +115,7 @@ namespace BiggerUI
             BiggerUiPlugin.AreaMaxFontSize.SettingChanged -= HandleSettingChanged;
             BiggerUiPlugin.Canvases.SettingChanged -= HandleSettingChanged;
             BiggerUiPlugin.AutoSize.SettingChanged -= HandleSettingChanged;
+            BiggerUiPlugin.FitToBox.SettingChanged -= HandleSettingChanged;
         }
 
         /// <summary>
@@ -143,6 +151,16 @@ namespace BiggerUI
             }
             else
             {
+                // Undo the auto-sizing this mod switched on, or the text would keep fitting
+                // itself to its box after the mod has supposedly let go of it.
+                if (baseline.FitToBoxApplied)
+                {
+                    text.enableAutoSizing = false;
+                    text.fontSizeMin = baseline.FontSizeMin;
+                    text.fontSizeMax = baseline.FontSizeMax;
+                    baseline.FitToBoxApplied = false;
+                }
+
                 text.fontSize = baseline.FontSize;
                 baseline.Applied = baseline.FontSize;
             }
@@ -580,6 +598,39 @@ namespace BiggerUI
                 }
 
                 baseline.Applied = targetMin;
+                return true;
+            }
+
+            // Fixed-size text. This is the branch the quest log's names go through, and the one
+            // that was growing them blind: every fit check this mod had applied only to
+            // auto-sized text, so AutoSize=GrowWithinBox did nothing for them and they kept
+            // being pushed past what their box holds until TextMeshPro dropped the line.
+            //
+            // The fix is to stop estimating and let TextMeshPro fit the text itself. Turning its
+            // auto-sizing on between the original size and the scaled size means it picks the
+            // largest size that actually fits: bigger where there is room, unchanged where there
+            // is none, and never smaller than the game's own size - so it cannot vanish.
+            if (BiggerUiPlugin.FitToBox.Value)
+            {
+                var ceiling = Ceiling(baseline.FontSize * scale, cap, baseline.FontSize);
+
+                if (!text.enableAutoSizing)
+                {
+                    text.enableAutoSizing = true;
+                }
+
+                if (!Mathf.Approximately(text.fontSizeMin, baseline.FontSize))
+                {
+                    text.fontSizeMin = baseline.FontSize;
+                }
+
+                if (!Mathf.Approximately(text.fontSizeMax, ceiling))
+                {
+                    text.fontSizeMax = ceiling;
+                }
+
+                baseline.FitToBoxApplied = true;
+                baseline.Applied = ceiling;
                 return true;
             }
 
