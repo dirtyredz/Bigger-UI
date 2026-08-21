@@ -3,7 +3,8 @@
 Makes Moonlight Peaks' text bigger, for people who find the default too small to read
 comfortably.
 
-**Status:** v0.4.0, built and deployed. Three versions of "some text got bigger and some did
+**Status:** v0.10.0, built and deployed — in progress, unpublished. Getting the basics right
+took three tries early on, "some text got bigger and some did
 not", each a different cause: v0.2.0 threw away every closed screen
 ([the inactive-screen bug](#the-inactive-screen-bug)), v0.3.0 fixed that but had an allowlist
 covering only two of the game's canvases ([the allowlist was too narrow](#the-allowlist-was-too-narrow)),
