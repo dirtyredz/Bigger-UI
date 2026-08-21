@@ -26,7 +26,7 @@ namespace BiggerUI
     {
         public const string PluginGuid = "com.dirtyredz.moonlightpeaks.biggerui";
         public const string PluginName = "Bigger UI";
-        public const string PluginVersion = "0.10.0";
+        public const string PluginVersion = ModBuildInfo.Version;
 
         /// <summary>What to do about text that TextMeshPro fits to its box.</summary>
         public enum AutoSizeMode
