@@ -3,7 +3,8 @@
 Makes Moonlight Peaks' text bigger, for people who find the default too small to read
 comfortably.
 
-**Status:** v0.10.0, built and deployed — in progress, unpublished. Getting the basics right
+**Status:** 🪦 **Retired 2026-08-22** — v0.10.0, built and deployed but never published; no longer
+maintained. The post-mortems below are kept as a record of what was learned. Getting the basics right
 took three tries early on, "some text got bigger and some did
 not", each a different cause: v0.2.0 threw away every closed screen
 ([the inactive-screen bug](#the-inactive-screen-bug)), v0.3.0 fixed that but had an allowlist
